@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -19,7 +17,7 @@ func createRPCs(cfg config) map[string]*noderpc.NodeRPC {
 	rpc := make(map[string]*noderpc.NodeRPC)
 	for i := range cfg.NodeRPC {
 		nodeCfg := cfg.NodeRPC[i]
-		rpc[nodeCfg.Network] = noderpc.NewNodeRPC(nodeCfg.Host, nodeCfg.Network)
+		rpc[nodeCfg.Network] = noderpc.NewNodeRPC(nodeCfg.Host)
 		rpc[nodeCfg.Network].SetTimeout(time.Second * 30)
 	}
 	return rpc
@@ -29,7 +27,7 @@ func createIndexer(es *elastic.Elastic, indexerType, network, url string) (index
 	if url == "" {
 		return nil, nil
 	}
-	s, err := es.CurrentState(network)
+	s, err := es.CurrentState(network, stateType)
 	if err != nil {
 		return nil, err
 	}
@@ -77,17 +75,17 @@ func createContract(c index.Contract, rpc *noderpc.NodeRPC, es *elastic.Elastic,
 	n.Network = network
 
 	n.ID = uuid.New().String()
-	err = computeMetrics(rpc, &n)
+	err = computeMetrics(rpc, es, &n)
 	return
 }
 
 func syncIndexer(rpc *noderpc.NodeRPC, indexer index.Indexer, es *elastic.Elastic, network string) error {
 	log.Printf("-----------%s-----------", strings.ToUpper(network))
-	head, err := rpc.GetHead()
+	level, err := rpc.GetLevel()
 	if err != nil {
 		return err
 	}
-	log.Printf("Current node state: %d", head.Level)
+	log.Printf("Current node state: %d", level)
 
 	// Get current DB state
 	s, ok := states[network]
@@ -95,7 +93,7 @@ func syncIndexer(rpc *noderpc.NodeRPC, indexer index.Indexer, es *elastic.Elasti
 		return fmt.Errorf("Unknown network: %s", network)
 	}
 	log.Printf("Current state: %d", s.Level)
-	if head.Level > s.Level {
+	if level > s.Level {
 		contracts, err := indexer.GetContracts(s.Level)
 		if err != nil {
 			return err
@@ -103,7 +101,6 @@ func syncIndexer(rpc *noderpc.NodeRPC, indexer index.Indexer, es *elastic.Elasti
 		log.Printf("New contracts: %d", len(contracts))
 
 		if len(contracts) > 0 {
-			bulk := bytes.NewBuffer([]byte{})
 			for _, c := range contracts {
 				n, err := createContract(c, rpc, es, network)
 				if err != nil {
@@ -113,32 +110,21 @@ func syncIndexer(rpc *noderpc.NodeRPC, indexer index.Indexer, es *elastic.Elasti
 
 				log.Printf("[%s] Contract found", n.Address)
 
-				meta := []byte(fmt.Sprintf(`{ "index" : { "_id": "%s"} }%s`, n.ID, "\n"))
-				data, err := json.Marshal(n)
-				if err != nil {
-					log.Println(err)
-					continue
+				if _, err := es.AddDocument(n, elastic.DocContracts); err != nil {
+					return err
 				}
-				data = append(data, "\n"...)
-
-				bulk.Grow(len(meta) + len(data))
-				bulk.Write(meta)
-				bulk.Write(data)
 
 				if s.Level < n.Level {
 					s.Level = n.Level
 					s.Timestamp = n.Timestamp
 					s.Network = network
+					s.Type = stateType
+				}
+
+				if _, err = es.UpdateDoc(elastic.DocStates, s.ID, s); err != nil {
+					return err
 				}
 			}
-
-			if err := es.BulkInsert(elastic.DocContracts, bulk); err != nil {
-				return err
-			}
-			log.Printf("[%s] Indexed %d contracts", network, len(contracts))
-		}
-		if _, err = es.UpdateDoc(elastic.DocStates, s.ID, s); err != nil {
-			return err
 		}
 		log.Printf("[%s] Synced", network)
 	}

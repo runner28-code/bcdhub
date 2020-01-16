@@ -3,14 +3,17 @@
         "uri": "http://localhost:9200"
     },
     "nodes": [{
-        "host": "https://rpc.tzkt.io",
+        "host": "https://rpc.tzkt.io/mainnet",
         "network": "mainnet"
     },{
-        "host": "https://rpc.tzkt.io",
+        "host": "https://rpc.tzkt.io/zeronet",
         "network": "zeronet"
     },{
-        "host": "https://rpc.tzkt.io",
+        "host": "https://rpc.tzkt.io/babylonnet",
         "network": "babylonnet"
+    },{
+        "host": "https://rpc.tzkt.io/carthagenet",
+        "network": "carthagenet"
     }],
     "tzkt": {
         "mainnet": "https://api.tzkt.io/v1/",
@@ -20,9 +23,9 @@
     },
     "tzstats": {
         "mainnet": "https://api.tzstats.com",
-        "zeronet": "",
-        "babylonnet": "",
-        "carthagenet": ""
+        "zeronet": "https://api.zeronet.tzstats.com",
+        "babylonnet": "https://api.babylonnet.tzstats.com",
+        "carthagenet": "https://api.carthagenet.tzstats.com"
     },
     "indexer": "tzstats",
     "update_timer": 60
