@@ -1,31 +1,26 @@
 package rawbytes
 
 import (
-	"encoding/hex"
+	"encoding/binary"
 	"fmt"
-	"strconv"
+	"io"
+	"strings"
 )
 
-func decodeString(h string) (string, int, error) {
-	if len(h) < 8 {
-		return "", 0, fmt.Errorf("decodeString err. input too short: %v", h)
+type stringDecoder struct{}
+
+// Decode -
+func (d stringDecoder) Decode(dec io.Reader, code *strings.Builder) (int, error) {
+	b := make([]byte, 4)
+	if n, err := dec.Read(b); err != nil {
+		return n, err
 	}
 
-	length, err := strconv.ParseInt(h[:8], 16, 64)
-	if err != nil {
-		return "", 0, err
+	length := int(binary.BigEndian.Uint32(b))
+	data := make([]byte, length)
+	if _, err := dec.Read(data); err != nil && err != io.EOF {
+		return 4 + length, err
 	}
-
-	offset := 8 + int(length)*2
-
-	if len(h) < offset {
-		return "", 0, fmt.Errorf("decodeString err. input too short: %v", h)
-	}
-
-	data, err := hex.DecodeString(h[8:offset])
-	if err != nil {
-		return "", 0, err
-	}
-
-	return string(data), offset, nil
+	fmt.Fprintf(code, `{ "string": "%s" }`, data)
+	return 4 + length, nil
 }
