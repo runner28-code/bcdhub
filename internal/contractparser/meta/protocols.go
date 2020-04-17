@@ -1,9 +1,11 @@
-package migrations
+package meta
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
+	"github.com/baking-bad/bcdhub/internal/elastic"
 	"github.com/baking-bad/bcdhub/internal/helpers"
 	"github.com/baking-bad/bcdhub/internal/models"
 	"github.com/baking-bad/bcdhub/internal/tzkt"
@@ -24,29 +26,43 @@ var symLinks = map[string]string{
 	"PsCARTHAGazKbHtnKfLzQg3kms52kSRpgnDY982a9oYsSXRLQEb": "babylon",
 }
 
-// CreateProtocols - migration that create protocol entities
-type CreateProtocols struct{}
+var protocols map[string]string
 
-// Description -
-func (m *CreateProtocols) Description() string {
-	return "migration that create protocol entities"
+// LoadProtocols -
+func LoadProtocols(e *elastic.Elastic) error {
+	response, err := e.GetProtocols()
+	if err != nil {
+		if !strings.Contains(err.Error(), "404 Not Found") {
+			return err
+		}
+	}
+	if len(response) == 0 {
+		response, err = createProtocols(e)
+		if err != nil {
+			return err
+		}
+	}
+	protocols = make(map[string]string)
+	for _, p := range response {
+		protocols[p.Hash] = p.SymLink
+	}
+	return nil
 }
 
-// Do - migrate function
-func (m *CreateProtocols) Do(ctx *Context) error {
+func createProtocols(es *elastic.Elastic) ([]models.Protocol, error) {
 	protocols := make([]models.Protocol, 0)
 	for _, network := range []string{"mainnet", "zeronet", "carthagenet", "babylonnet"} {
 		api := tzkt.NewTzKTForNetwork(network, time.Minute)
 
 		result, err := api.GetProtocols()
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		for i := range result {
 			symLink, ok := symLinks[result[i].Hash]
 			if !ok {
-				return fmt.Errorf("Unknown protocol: %s", result[i].Hash)
+				return nil, fmt.Errorf("Unknown protocol: %s", result[i].Hash)
 			}
 			protocols = append(protocols, models.Protocol{
 				ID:         helpers.GenerateID(),
@@ -60,5 +76,8 @@ func (m *CreateProtocols) Do(ctx *Context) error {
 		}
 
 	}
-	return ctx.ES.BulkInsertProtocols(protocols)
+	if err := es.BulkInsertProtocols(protocols); err != nil {
+		return nil, err
+	}
+	return protocols, nil
 }
