@@ -39,7 +39,7 @@ api:
         - mainnet
         - carthagenet
         - zeronet
-        - babylonnet
+        - dalphanet
     seed:
         enabled: false
 
