@@ -1,9 +1,12 @@
 package migrations
 
 import (
+	"errors"
+
 	"github.com/baking-bad/bcdhub/internal/config"
 	"github.com/baking-bad/bcdhub/internal/contractparser/consts"
 	"github.com/baking-bad/bcdhub/internal/elastic"
+	"github.com/baking-bad/bcdhub/internal/events"
 	"github.com/baking-bad/bcdhub/internal/logger"
 	"github.com/baking-bad/bcdhub/internal/models"
 	"github.com/baking-bad/bcdhub/internal/models/tzip"
@@ -84,6 +87,10 @@ func (m *ExtendedStorageEvents) Do(ctx *config.Context) error {
 					}
 					transfers, err := parser.Parse(op, opModels)
 					if err != nil {
+						if errors.Is(err, events.ErrNodeReturn) {
+							logger.Error(err)
+							continue
+						}
 						return err
 					}
 					for _, t := range transfers {
