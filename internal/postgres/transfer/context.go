@@ -49,14 +49,8 @@ func (storage *Storage) buildGetContext(query *gorm.DB, ctx transfer.GetContext,
 	if ctx.TokenID != nil {
 		query.Where("token_id = ?", *ctx.TokenID)
 	}
-	if ctx.Hash != "" {
-		query.Where("hash = ?", ctx.Hash)
-	}
-	if ctx.Counter != nil {
-		query.Where("counter = ?", *ctx.Counter)
-	}
-	if ctx.Nonce != nil {
-		query.Where("nonce = ?", *ctx.Nonce)
+	if ctx.OperationID != nil {
+		query.Where("operation_id = ?", *ctx.OperationID)
 	}
 
 	if withSize {
