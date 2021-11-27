@@ -84,17 +84,6 @@ services:
       - bcdshare:/etc/bcd
     logging: *bcd-logging
 
-  flextesa:
-    restart: always
-    image: tqtezos/flextesa:20210514
-    command: flobox start
-    environment:
-      - block_time=4
-    ports:
-      - 127.0.0.1:8732:20000
-      - 172.17.0.1:8732:20000
-    logging: *bcd-logging
-
   gui:
     container_name: sandbox-gui
     restart: always
