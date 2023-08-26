@@ -5,35 +5,36 @@
 package account
 
 import (
+	reflect "reflect"
+
 	model "github.com/baking-bad/bcdhub/internal/models/account"
 	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
 )
 
-// MockRepository is a mock of Repository interface
+// MockRepository is a mock of Repository interface.
 type MockRepository struct {
 	ctrl     *gomock.Controller
 	recorder *MockRepositoryMockRecorder
 }
 
-// MockRepositoryMockRecorder is the mock recorder for MockRepository
+// MockRepositoryMockRecorder is the mock recorder for MockRepository.
 type MockRepositoryMockRecorder struct {
 	mock *MockRepository
 }
 
-// NewMockRepository creates a new mock instance
+// NewMockRepository creates a new mock instance.
 func NewMockRepository(ctrl *gomock.Controller) *MockRepository {
 	mock := &MockRepository{ctrl: ctrl}
 	mock.recorder = &MockRepositoryMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
-// Get mocks base method
+// Get mocks base method.
 func (m *MockRepository) Get(address string) (model.Account, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", address)
@@ -42,37 +43,8 @@ func (m *MockRepository) Get(address string) (model.Account, error) {
 	return ret0, ret1
 }
 
-// Get indicates an expected call of Get
+// Get indicates an expected call of Get.
 func (mr *MockRepositoryMockRecorder) Get(address interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockRepository)(nil).Get), address)
-}
-
-// Alias mocks base method
-func (m *MockRepository) Alias(address string) (string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Alias", address)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Alias indicates an expected call of Alias
-func (mr *MockRepositoryMockRecorder) Alias(address interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Alias", reflect.TypeOf((*MockRepository)(nil).Alias), address)
-}
-
-// UpdateAlias mocks base method
-func (m *MockRepository) UpdateAlias(account model.Account) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateAlias", account)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateAlias indicates an expected call of UpdateAlias
-func (mr *MockRepositoryMockRecorder) UpdateAlias(account interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAlias", reflect.TypeOf((*MockRepository)(nil).UpdateAlias), account)
 }
