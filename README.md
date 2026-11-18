@@ -1,5 +1,5 @@
 # BCD Hub
-[![Build Status](https://github.com/baking-bad/bcdhub/workflows/build/badge.svg)](https://github.com/baking-bad/bcdhub/actions?query=branch%3Amaster+workflow%3A%22build%22)
+[![Build Status](https://github.com/runner28-code/bcdhub/workflows/build/badge.svg)](https://github.com/runner28-code/bcdhub/actions?query=branch%3Amaster+workflow%3A%22build%22)
 [![made_with golang](https://img.shields.io/badge/made_with-golang-blue.svg)](https://golang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbaking-bad%2Fbcdhub.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fbaking-bad%2Fbcdhub?ref=badge_shield)
